@@ -1,0 +1,92 @@
+Semaphore Assignment
+Two Parts, processes and threads.
+
+Sets up deadlock conditions for practice detecting and recovering.
+Submit your .c source files and make files if needed
+
+Part 2 threads using pthread 
+Same as Part 1 except instead of fork spawn threads and use unamed semaphores.
+Use sem_init() not sem_open()
+
+Part 1 Processes
+Two semaphores needed screen, keyboard
+Use NAMED semaphores, do not use unnamed or memory based.  Must use sem_open() NOT sem_init().
+
+Please see: http://man7.org/linux/man-pages/man7/sem_overview.7.html
+and at least look at the major paragraphs 
+“Named semaphores”
+and 
+“Unnamed semaphores (memory-based semaphores)”
+
+Some functions fork(), sem_open() 
+The text below is called an algorithm, English description or design for code.  If you make this into comments you can put your code under each line which is how designs work.
+
+mother process called 'main'
+
+  sem_open both semaphores
+
+  fork 9 processes 
+	Each process passed index of loop so 1,2,3, or 4
+  Below is real C to show just how easy this is, please do not overthink
+  sem_t * sems, * semk;
+  sems = sem_open(......
+  int pids[9]; int pid;
+  int i = 0;
+  do {
+    if( (pid = fork()) == 0)
+	Process(sems, semk, i);
+    else {
+      pids[i] = pid;
+      i++;
+    }
+  } while( i < 9 && pid > 0);
+  if(i >= 9) { // stop forking around
+     after all die, use single call or loop based on ids saved above
+     sem_unlink both
+  }
+return 0;
+   
+End Mother process
+
+each process
+
+Process (sem_t * screen, sem_t * keyboard, int index)
+  // sem_open both semaphores if necessary
+        count = 0
+	id = getpid()
+	loop
+	   count += getSemaphores(index)
+  	   prompt id + " enter < 80 characters " + id + " or q to quit: "
+  	   read keboard
+  	   echo what was typed with id before and after echo
+		echo id + " start " + what was typed + id + " end"
+	   sem_post or give back both semaphores
+
+	until quit end inner loop in C do ... while not q
+	count += getSemaphores(index)
+	 prompt "This process " + id + " had " + count + " deadlocks "
+	 sem_post or give back both semaphores
+sem_close 
+exit
+
+
+function to get semaphores (screen, keyboard, index)
+  returns count of how many times recovered from deadlock
+  odd index gets screen first
+  even index gets keyboard first
+  count = 0
+  loop
+  	sem_wait for first
+	sleep(1) // only use this if no deadlocks without it should not be necessary
+  	sem_timedwait with timer for second
+   	if timeout 
+     		give back first, (sem_post)
+     		wait random time
+		increment count
+   	else
+     		have both  true   
+ until have both
+ return count
+end get semaphores function
+
+
